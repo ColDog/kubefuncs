@@ -8,15 +8,44 @@ Goals:
 - Built on top of Docker and core Kubernetes resources.
 - Simple opinionated structure.
 
+This project came out of the desire to have a simple programming model for Kubernetes. Writing helm charts and deploying that through a CI system and wiring up services is incredibly powerful but very confusing for a newcomer, Kubernetes concepts are hard. This is an attempt at an opinionated application framework that supports multiple languages and is based on core Kubernetes concepts. The main actor is a control loop the listens to a queue and responds to events.
+
 ## Getting Started
 
-We require Helm to deploy resources into Kubernetes. You can also apply using helm-template if Helm cannot be used.
+Prerequisite: A working Kubernetes installation like minikube.
 
-TODO setup instructions, separate from this repository.
+1. Clone the repo and setup core components.
 
-Custom application resources can be generated as well, KubeFuncs uses core Kubernetes resources in v1 status, use the generator to get started but customize as needed.
+```sh
+git clone https://github.com/ColDog/kubefuncs
+cd kubefuncs
 
-Projects are generated for specific languages using client libraries.
+kubectl apply -f charts/nsq/rendered.yaml
+kubectl apply -f charts/gateway/rendered.yaml
+```
+
+2. Using the CLI, apply the example app into the cluster.
+
+```sh
+./kubefunctl --apply \
+  --image TODO \
+  --namespace default \
+  --release example-app \
+  --functions example/functions.yaml
+```
+
+3. Proxy the gateway locally
+
+```sh
+GATEWAY_POD=$(kubectl -n kubefuncs get pods | grep gateway | awk '{print $1}')
+kubectl -n kubefuncs port-forward $GATEWAY_POD 8080:8080
+```
+
+4. Curl the gateway and receive a pong from the example app.
+```sh
+curl localhost:8080/test/hello
+> pong
+```
 
 ## Architecture
 
