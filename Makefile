@@ -1,8 +1,11 @@
+# Local registry should be proxying into minikube.
 REGISTRY := "localhost:5000"
+
+# Allocate a random tag to always rebuild.
 TAG := tag$(shell date +%s)
 
 deploy-example:
-	@./deploy --build --apply \
+	@./kubefunctl --build --apply \
 		--image localhost:5000/example-app:$(TAG) \
 		--namespace default \
 		--release example-app \
@@ -22,3 +25,8 @@ deploy-gateway:
 render-charts:
 	helm-template charts/nsq --release kubefuncs --namespace kubefuncs > charts/nsq/rendered.yaml
 	helm-template charts/gateway --release kubefuncs --namespace kubefuncs > charts/gateway/rendered.yaml
+
+build:
+	@mkdir -p bin
+	@go build -o bin/gateway ./gateway
+	@go build -o bin/http-pong ./example/http-pong

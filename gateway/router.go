@@ -11,11 +11,15 @@ import (
 	kubefuncs "github.com/coldog/kubefuncs/clients/go"
 )
 
+// Config is the configuration for the router.
+type Config struct {
+	// Routes are a map of prefixes to topics.
+	Routes map[string]string `json:"routes"`
+}
+
 // Router returns the given topic for the provided route.
 type Router struct {
-	// Routes are a map of prefixes to topics.
-	// TODO: More advanced matching.
-	Routes map[string]string
+	Config
 	Client *kubefuncs.Client
 }
 

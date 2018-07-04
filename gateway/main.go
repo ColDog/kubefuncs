@@ -19,17 +19,17 @@ func main() {
 	var (
 		listenAddr string
 		configFile string
+		config     = &Config{}
 	)
 	flag.StringVar(&listenAddr, "listen-addr", ":8080", "gateway listen address")
 	flag.StringVar(&configFile, "config", "routes.json", "routes configuration file")
 	flag.Parse()
 
-	routes := map[string]string{}
 	f, err := os.Open(configFile)
 	if err != nil {
 		handleErr(err)
 	}
-	err = json.NewDecoder(f).Decode(&routes)
+	err = json.NewDecoder(f).Decode(config)
 	if err != nil {
 		handleErr(err)
 	}
@@ -42,8 +42,8 @@ func main() {
 	}
 
 	router := &Router{
+		Config: *config,
 		Client: client,
-		Routes: routes,
 	}
 
 	err = http.ListenAndServe(listenAddr, router)

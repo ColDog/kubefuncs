@@ -8,66 +8,21 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	nsq "github.com/nsqio/go-nsq"
-	uuid "github.com/satori/go.uuid"
 )
 
-type Message struct {
-	*Event
-	Response *Event
-}
-
-func NewEvent(topic string, payload proto.Message) (*Event, error) {
-	if topic == "" {
-		return nil, errors.New("topic is empty")
-	}
-
-	id := uuid.NewV4().String()
-	a, err := ptypes.MarshalAny(payload)
+func Run(handler Handler) error {
+	c, err := NewClient()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	ev := &Event{
-		Id:      id,
-		Topic:   topic,
-		Payload: a,
-	}
-	return ev, nil
-}
-
-func (m *Message) Payload(dst proto.Message) error {
-	return ptypes.UnmarshalAny(m.Event.Payload, dst)
-}
-
-func (m *Message) Respond(ev *Event) { m.Response = ev }
-
-type Handler interface {
-	Handle(ev *Message) error
-}
-
-type Option func(o *opts)
-
-func WithLookupdURL(url string) Option { return func(o *opts) { o.lookupdURL = url } }
-func WithNsqdURL(url string) Option    { return func(o *opts) { o.nsqdURL = url } }
-func WithClientID(id string) Option    { return func(o *opts) { o.clientID = id } }
-func WithCallEnabled() Option          { return func(o *opts) { o.rpc = true } }
-
-type opts struct {
-	lookupdURL string
-	nsqdURL    string
-	clientID   string
-	rpc        bool
+	c.OnDefault(handler)
+	c.Wait()
+	return nil
 }
 
 func NewClient(options ...Option) (*Client, error) {
-	hostname, _ := os.Hostname()
-	opts := &opts{
-		lookupdURL: os.Getenv("NSQ_LOOKUPD_ADDR") + ":" + os.Getenv("NSQ_LOOKUPD_PORT"),
-		nsqdURL:    os.Getenv("NSQ_NSQD_ADDR") + ":" + os.Getenv("NSQ_NSQD_PORT"),
-		clientID:   hostname,
-	}
+	opts := defaults()
 	for _, o := range options {
 		o(opts)
 	}
@@ -95,17 +50,6 @@ func NewClient(options ...Option) (*Client, error) {
 	}
 	log.Printf("client initialized: %+v", *opts)
 	return h, nil
-}
-
-func Run(handler Handler) error {
-	topic := os.Getenv("TOPIC")
-	c, err := NewClient()
-	if err != nil {
-		return err
-	}
-	c.On(topic, "default", handler)
-	c.Wait()
-	return nil
 }
 
 type Client struct {
@@ -156,6 +100,10 @@ func (h *Client) Call(ctx context.Context, ev *Event) (*Message, error) {
 		return nil, err
 	}
 	return &Message{Event: resp}, nil
+}
+
+func (h *Client) OnDefault(handler Handler) {
+	h.On(h.topic, h.channel, handler)
 }
 
 func (h *Client) On(topic, channel string, handler Handler) {

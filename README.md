@@ -12,9 +12,7 @@ Goals:
 
 We require Helm to deploy resources into Kubernetes. You can also apply using helm-template if Helm cannot be used.
 
-1. Install `kubefunctl`.
-2. Run `kubefunctl init --language go` which will setup a project.
-4. Run `kubefunctl deploy` which will generate a helm chart to deploy your functions.
+TODO setup instructions, separate from this repository.
 
 Custom application resources can be generated as well, KubeFuncs uses core Kubernetes resources in v1 status, use the generator to get started but customize as needed.
 

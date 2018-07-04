@@ -10,14 +10,9 @@ import (
 type handler struct{}
 
 func (h handler) Handle(ev *kubefuncs.Message) error {
-	resp, err := kubefuncs.NewEvent(ev.Event.Return, &kubefuncs.HTTPResponse{
+	return ev.Respond(&kubefuncs.HTTPResponse{
 		Body: []byte("pong\n"),
 	})
-	if err != nil {
-		return err
-	}
-	ev.Respond(resp)
-	return nil
 }
 
 func main() {
