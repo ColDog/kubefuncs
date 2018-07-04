@@ -11,8 +11,8 @@ import (
 	nsq "github.com/nsqio/go-nsq"
 )
 
-func Run(handler Handler) error {
-	c, err := NewClient()
+func Run(handler Handler, options ...Option) error {
+	c, err := NewClient(options...)
 	if err != nil {
 		return err
 	}

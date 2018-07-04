@@ -1,2 +1,4 @@
 test:
   command: ['/bin/http-pong']
+archive:
+  command: ['/bin/http-archive']
