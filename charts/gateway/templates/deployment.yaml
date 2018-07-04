@@ -1,0 +1,46 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+      annotations:
+        kubefuncs.io/checksum-config: {{ toJson .Values.routes | sha256sum }}
+    spec:
+      containers:
+      - name: {{ template "name" . }}
+        image: {{ .Values.registry }}/gateway:{{ default .Chart.Version .Values.tag }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        command:
+        - /bin/gateway
+        - --config=/etc/gateway/routes.json
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: NSQ_NSQD_PORT
+{{ toYaml .Values.nsqd.port | indent 10 }}
+        - name: NSQ_NSQD_ADDR
+{{ toYaml .Values.nsqd.addr | indent 10 }}
+        - name: NSQ_LOOKUPD_ADDR
+{{ toYaml .Values.lookupd.addr | indent 10 }}
+        - name: NSQ_LOOKUPD_PORT
+{{ toYaml .Values.lookupd.port | indent 10 }}
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/gateway
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "fullname" . }}
