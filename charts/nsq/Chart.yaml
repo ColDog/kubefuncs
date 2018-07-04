@@ -1,0 +1,4 @@
+apiVersion: v1
+description: nsq.io
+name: nsq
+version: v1.0.0-compat

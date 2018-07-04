@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ template "fullname" . }}-lookupd
+  labels:
+    app: {{ template "name" . }}-lookupd
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.lookupd.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}-lookupd
+    spec:
+      containers:
+      - name: {{ template "name" . }}-lookupd
+        image: nsqio/nsq:{{ .Chart.Version }}
+        resources:
+{{ toYaml .Values.lookupd.resources | indent 10 }}
+        command:
+        - /nsqlookupd
+        ports:
+        - name: tcp
+          containerPort: 4160
+        - name: http
+          containerPort: 4161

@@ -1,0 +1,155 @@
+---
+# Source: nsq/templates/admin-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: kubefuncs
+  name: kubefuncs-nsq-admin
+  labels:
+    app: nsq-admin
+    chart: nsq-v1.0.0-compat
+    release: kubefuncs
+    heritage: Tiller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nsq-admin
+    spec:
+      containers:
+      - name: nsq-admin
+        image: nsqio/nsq:v1.0.0-compat
+        resources:
+          {}
+          
+        command:
+        - /nsqadmin
+        - --lookupd-http-address=kubefuncs-nsq-lookupd.kubefuncs.svc.cluster.local:4161
+        ports:
+        - name: http
+          containerPort: 4761
+
+---
+# Source: nsq/templates/admin-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kubefuncs
+  name: kubefuncs-nsq-admin
+  labels:
+    app: nsq-admin
+    chart: nsq-v1.0.0-compat
+    release: kubefuncs
+    heritage: Tiller
+spec:
+  ports:
+  - port: 4161
+    protocol: TCP
+    name: http
+    targetPort: 4171
+  selector:
+    app: nsq-admin
+
+---
+# Source: nsq/templates/lookupd-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: kubefuncs
+  name: kubefuncs-nsq-lookupd
+  labels:
+    app: nsq-lookupd
+    chart: nsq-v1.0.0-compat
+    release: kubefuncs
+    heritage: Tiller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nsq-lookupd
+    spec:
+      containers:
+      - name: nsq-lookupd
+        image: nsqio/nsq:v1.0.0-compat
+        resources:
+          {}
+          
+        command:
+        - /nsqlookupd
+        ports:
+        - name: tcp
+          containerPort: 4160
+        - name: http
+          containerPort: 4161
+
+---
+# Source: nsq/templates/lookupd-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kubefuncs
+  name: kubefuncs-nsq-lookupd
+  labels:
+    app: nsq-lookupd
+    chart: nsq-v1.0.0-compat
+    release: kubefuncs
+    heritage: Tiller
+spec:
+  ports:
+  - port: 4160
+    protocol: TCP
+    name: tcp
+    targetPort: 4160
+  - port: 4161
+    protocol: TCP
+    name: http
+    targetPort: 4161
+  selector:
+    app: nsq-lookupd
+
+---
+# Source: nsq/templates/nsqd-daemonset.yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  namespace: kubefuncs
+  name: kubefuncs-nsq-nsqd
+  labels:
+    app: nsq-nsqd
+    chart: nsq-v1.0.0-compat
+    release: kubefuncs
+    heritage: Tiller
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nsq-nsqd
+    spec:
+      containers:
+      - name: nsq-nsqd
+        image: nsqio/nsq:v1.0.0-compat
+        imagePullPolicy: Always
+        resources:
+          {}
+          
+        command:
+        - /nsqd
+        - --lookupd-tcp-address=kubefuncs-nsq-lookupd.kubefuncs.svc.cluster.local:4160
+        - --broadcast-address=$(NODE_IP)
+        ports:
+        - name: tcp
+          containerPort: 4150
+          hostPort: 4150
+        - name: http
+          containerPort: 4151
+          hostPort: 4151
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+

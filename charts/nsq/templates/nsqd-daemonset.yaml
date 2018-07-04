@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ template "fullname" . }}-nsqd
+  labels:
+    app: {{ template "name" . }}-nsqd
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}-nsqd
+    spec:
+      containers:
+      - name: {{ template "name" . }}-nsqd
+        image: nsqio/nsq:{{ .Chart.Version }}
+        imagePullPolicy: Always
+        resources:
+{{ toYaml .Values.nsqd.resources | indent 10 }}
+        command:
+        - /nsqd
+        - --lookupd-tcp-address={{ template "dns.lookupd" . }}:4160
+        - --broadcast-address=$(NODE_IP)
+        ports:
+        - name: tcp
+          containerPort: 4150
+          hostPort: 4150
+        - name: http
+          containerPort: 4151
+          hostPort: 4151
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP

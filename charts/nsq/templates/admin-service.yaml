@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ template "fullname" . }}-admin
+  labels:
+    app: {{ template "name" . }}-admin
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  ports:
+  - port: 4161
+    protocol: TCP
+    name: http
+    targetPort: 4171
+  selector:
+    app: {{ template "name" . }}-admin

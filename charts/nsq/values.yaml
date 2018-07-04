@@ -1,0 +1,9 @@
+lookupd:
+  replicas: 1
+  resources: {}
+
+nsqd:
+  resources: {}
+
+admin:
+  resources: {}

@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ template "fullname" . }}-admin
+  labels:
+    app: {{ template "name" . }}-admin
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}-admin
+    spec:
+      containers:
+      - name: {{ template "name" . }}-admin
+        image: nsqio/nsq:{{ .Chart.Version }}
+        resources:
+{{ toYaml .Values.admin.resources | indent 10 }}
+        command:
+        - /nsqadmin
+        - --lookupd-http-address={{ template "dns.lookupd" . }}:4161
+        ports:
+        - name: http
+          containerPort: 4761
