@@ -18,16 +18,9 @@ func handleErr(err error) {
 func main() {
 	var (
 		listenAddr string
-		lookupdURL string
-		nsqdURL    string
-		gatewayID  string
 		configFile string
 	)
-	hostname, _ := os.Hostname()
 	flag.StringVar(&listenAddr, "listen-addr", ":8080", "gateway listen address")
-	flag.StringVar(&gatewayID, "gateway-id", hostname, "gateway id is a unique id for this gateway instance")
-	flag.StringVar(&lookupdURL, "lookupd-addr", "127.0.0.1:4161", "nsqlookupd address")
-	flag.StringVar(&nsqdURL, "nsqd-addr", "127.0.0.1:4150", "nsqd address")
 	flag.StringVar(&configFile, "config", "routes.json", "routes configuration file")
 	flag.Parse()
 
@@ -43,9 +36,6 @@ func main() {
 
 	client, err := kubefuncs.NewClient(
 		kubefuncs.WithCallEnabled(),
-		kubefuncs.WithClientID(gatewayID),
-		kubefuncs.WithLookupdURL(lookupdURL),
-		kubefuncs.WithNsqdURL(nsqdURL),
 	)
 	if err != nil {
 		handleErr(err)

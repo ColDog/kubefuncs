@@ -62,7 +62,12 @@ type opts struct {
 }
 
 func NewClient(options ...Option) (*Client, error) {
-	opts := &opts{}
+	hostname, _ := os.Hostname()
+	opts := &opts{
+		lookupdURL: os.Getenv("NSQ_LOOKUPD_ADDR") + ":" + os.Getenv("NSQ_LOOKUPD_PORT"),
+		nsqdURL:    os.Getenv("NSQ_NSQD_ADDR") + ":" + os.Getenv("NSQ_NSQD_PORT"),
+		clientID:   hostname,
+	}
 	for _, o := range options {
 		o(opts)
 	}
@@ -90,6 +95,17 @@ func NewClient(options ...Option) (*Client, error) {
 	}
 	log.Printf("client initialized: %+v", *opts)
 	return h, nil
+}
+
+func Run(handler Handler) error {
+	topic := os.Getenv("TOPIC")
+	c, err := NewClient()
+	if err != nil {
+		return err
+	}
+	c.On(topic, "default", handler)
+	c.Wait()
+	return nil
 }
 
 type Client struct {
@@ -143,6 +159,8 @@ func (h *Client) Call(ctx context.Context, ev *Event) (*Message, error) {
 }
 
 func (h *Client) On(topic, channel string, handler Handler) {
+	h.Emit(context.Background(), &Event{Id: "ping", Topic: topic})
+
 	h.subscribe(topic, channel, nsq.HandlerFunc(func(msg *nsq.Message) error {
 		ev := &Event{}
 		if err := proto.Unmarshal(msg.Body, ev); err != nil {
@@ -150,6 +168,11 @@ func (h *Client) On(topic, channel string, handler Handler) {
 		}
 		wrap := &Message{Event: ev}
 		log.Printf("handling: %v", ev)
+
+		if ev.Id == "ping" {
+			msg.Finish()
+			return nil
+		}
 
 		if err := handler.Handle(wrap); err != nil {
 			log.Printf("handler err: %v", err)
