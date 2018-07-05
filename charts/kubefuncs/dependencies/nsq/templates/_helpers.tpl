@@ -39,11 +39,11 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{- define "nsqd.name" -}}
-{{ template "name" . }}-nsq
+{{ template "name" . }}-nsqd
 {{- end -}}
 
 {{- define "nsqd.fullname" -}}
-{{ template "fullname" . }}-nsq
+{{ template "fullname" . }}-nsqd
 {{- end -}}
 
 {{- define "lookupd.name" -}}

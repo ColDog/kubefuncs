@@ -38,4 +38,4 @@ release:
 	docker build -t coldog/kubefuncs-gateway:$(GATEWAY_VERSION) -f gateway/Dockerfile .
 	docker push coldog/kubefuncs-gateway:$(GATEWAY_VERSION)
 	git tag -a $(VERSION) -m "Release $(VERSION)"
-	git push --tags
+	git push --all

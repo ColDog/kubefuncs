@@ -9,4 +9,4 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
-  routes.json: {{ .Values.routes | toJson | quote }}
+  routes.json: {{ .Values.config | toJson | quote }}

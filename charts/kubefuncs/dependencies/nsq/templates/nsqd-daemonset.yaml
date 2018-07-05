@@ -15,11 +15,13 @@ spec:
     metadata:
       labels:
         app: {{ template "nsqd.name" . }}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9117'
     spec:
       containers:
-      - name: {{ template "nsqd.name" . }}
+      - name: nsqd
         image: nsqio/nsq:{{ .Chart.Version }}
-        imagePullPolicy: Always
         resources:
 {{ toYaml .Values.nsqd.resources | indent 10 }}
         command:
@@ -33,6 +35,19 @@ spec:
         - name: http
           containerPort: 4151
           hostPort: 4151
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+      - name: exporter
+        image: lovoo/nsq_exporter:latest
+        command:
+        - /nsq_exporter
+        - -nsqd.addr=http://$(NODE_IP):4151
+        ports:
+        - name: http
+          containerPort: 9117
         env:
         - name: NODE_IP
           valueFrom:

@@ -15,8 +15,9 @@ registry: coldog/kubefuncs-gateway
 tag: null
 
 # Route configuration, mapping path prefix to topic.
-routes:
-  /test/: test
+config:
+  routes:
+    /test/: test
 
 # NSQD configuration.
 nsqd:
