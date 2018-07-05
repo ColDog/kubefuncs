@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ template "fullname" . }}-lookupd
+  name: {{ template "lookupd.fullname" . }}
   labels:
-    app: {{ template "name" . }}-lookupd
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "lookupd.name" . }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -19,4 +19,4 @@ spec:
     name: http
     targetPort: 4161
   selector:
-    app: {{ template "name" . }}-lookupd
+    app: {{ template "lookupd.name" . }}

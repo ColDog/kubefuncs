@@ -2,10 +2,10 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ template "fullname" . }}-nsqd
+  name: {{ template "nsqd.fullname" . }}
   labels:
-    app: {{ template "name" . }}-nsqd
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "nsqd.name" . }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -14,10 +14,10 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}-nsqd
+        app: {{ template "nsqd.name" . }}
     spec:
       containers:
-      - name: {{ template "name" . }}-nsqd
+      - name: {{ template "nsqd.name" . }}
         image: nsqio/nsq:{{ .Chart.Version }}
         imagePullPolicy: Always
         resources:

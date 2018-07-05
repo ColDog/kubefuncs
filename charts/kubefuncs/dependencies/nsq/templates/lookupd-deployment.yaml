@@ -2,10 +2,10 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ template "fullname" . }}-lookupd
+  name: {{ template "lookupd.fullname" . }}
   labels:
-    app: {{ template "name" . }}-lookupd
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "lookupd.name" . }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -13,10 +13,10 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}-lookupd
+        app: {{ template "lookupd.name" . }}
     spec:
       containers:
-      - name: {{ template "name" . }}-lookupd
+      - name: {{ template "lookupd.name" . }}
         image: nsqio/nsq:{{ .Chart.Version }}
         resources:
 {{ toYaml .Values.lookupd.resources | indent 10 }}

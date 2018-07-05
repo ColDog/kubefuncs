@@ -2,10 +2,10 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ template "fullname" . }}-admin
+  name: {{ template "admin.fullname" . }}
   labels:
-    app: {{ template "name" . }}-admin
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "admin.name" . }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -13,10 +13,10 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}-admin
+        app: {{ template "admin.name" . }}
     spec:
       containers:
-      - name: {{ template "name" . }}-admin
+      - name: {{ template "admin.name" . }}
         image: nsqio/nsq:{{ .Chart.Version }}
         resources:
 {{ toYaml .Values.admin.resources | indent 10 }}

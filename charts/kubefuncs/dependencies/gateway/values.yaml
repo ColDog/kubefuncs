@@ -11,7 +11,7 @@ resources: {}
 #   memory: 256Mi
 
 # Image configuration.
-registry: localhost:5000
+registry: coldog/kubefuncs-gateway
 tag: null
 
 # Route configuration, mapping path prefix to topic.

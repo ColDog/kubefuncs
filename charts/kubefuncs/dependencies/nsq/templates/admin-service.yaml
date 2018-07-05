@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ template "fullname" . }}-admin
+  name: {{ template "admin.fullname" . }}
   labels:
-    app: {{ template "name" . }}-admin
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "admin.name" . }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -15,4 +15,4 @@ spec:
     name: http
     targetPort: 4171
   selector:
-    app: {{ template "name" . }}-admin
+    app: {{ template "admin.name" . }}

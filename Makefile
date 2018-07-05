@@ -4,6 +4,9 @@ REGISTRY := "localhost:5000"
 # Allocate a random tag to always rebuild.
 TAG := tag$(shell date +%s)
 
+GATEWAY_VERSION := $(shell cat charts/kubefuncs/dependencies/gateway/Chart.yaml | grep 'version' | awk '{print $$2}')
+VERSION := $(shell cat charts/kubefuncs/Chart.yaml | grep 'version' | awk '{print $$2}')
+
 deploy-example:
 	@./kubefunctl --build --apply \
 		--image localhost:5000/example-app:$(TAG) \
@@ -30,3 +33,9 @@ build:
 	@mkdir -p bin
 	@go build -o bin/gateway ./gateway
 	@go build -o bin/http-pong ./example/http-pong
+
+release:
+	docker build -t coldog/kubefuncs-gateway:$(GATEWAY_VERSION) -f gateway/Dockerfile .
+	docker push coldog/kubefuncs-gateway:$(GATEWAY_VERSION)
+	git tag -a $(VERSION) -m "Release $(VERSION)"
+	git push --tags

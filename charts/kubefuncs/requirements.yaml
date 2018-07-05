@@ -1,0 +1,10 @@
+dependencies:
+- name: gateway
+  version: v0.0.1
+  repository: "file://./dependencies/gateway"
+- name: nsq
+  version: v1.0.0-compat
+  repository: "file://./dependencies/nsq"
+- name: prometheus
+  version: 6.8.0
+  repository: https://kubernetes-charts.storage.googleapis.com

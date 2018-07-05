@@ -1,18 +1,12 @@
 apiVersion: v1
-kind: Service
+kind: ConfigMap
 metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ template "fullname" . }}
   labels:
     app: {{ template "name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    chart: {{ template "chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-spec:
-  ports:
-  - port: 8080
-    protocol: TCP
-    name: http
-    targetPort: 8080
-  selector:
-    app: {{ template "name" . }}
+data:
+  routes.json: {{ .Values.routes | toJson | quote }}
