@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -24,6 +25,8 @@ func main() {
 	flag.StringVar(&listenAddr, "listen-addr", ":8080", "gateway listen address")
 	flag.StringVar(&configFile, "config", "routes.json", "routes configuration file")
 	flag.Parse()
+
+	log.Println("gateway: starting")
 
 	f, err := os.Open(configFile)
 	if err != nil {

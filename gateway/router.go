@@ -25,6 +25,9 @@ type Router struct {
 
 // Route will return the topic for the given path.
 func (ro *Router) route(path string) string {
+	if strings.HasPrefix(path, "/health") {
+		return "health"
+	}
 	for key, val := range ro.Routes {
 		if strings.HasPrefix(path, key) {
 			return val
@@ -41,6 +44,10 @@ func (ro *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	topic := ro.route(r.URL.Path)
 	if topic == "" {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if topic == "health" {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 

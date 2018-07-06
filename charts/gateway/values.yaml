@@ -43,3 +43,23 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Gateway configuration.
+# TODO: Document.
+config:
+  routes:
+    /test/: test
+
+# Gateway default environment variables.
+# TODO: Document.
+env:
+  - name: NSQ_NSQD_PORT
+    value: "4150"
+  - name: NSQ_NSQD_ADDR
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
+  - name: NSQ_LOOKUPD_ADDR
+    value: kubefuncs-nsq-lookupd.kubefuncs.svc.cluster.local
+  - name: NSQ_LOOKUPD_PORT
+    value: "4161"

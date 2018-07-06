@@ -1,6 +1,6 @@
 image:
-  repository: nginx
-  tag: stable
+  repository: null
+  tag: null
   pullPolicy: IfNotPresent
 
 defaults:

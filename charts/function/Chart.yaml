@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Kubefuncs base chart
+name: function
+version: 0.1.0

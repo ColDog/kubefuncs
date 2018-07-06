@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 
@@ -16,6 +17,7 @@ func Run(handler Handler, options ...Option) error {
 	if err != nil {
 		return err
 	}
+	c.ListenHealthz()
 	c.OnDefault(handler)
 	c.Wait()
 	return nil
@@ -61,6 +63,19 @@ type Client struct {
 	consumers   []*nsq.Consumer
 
 	responses map[string]chan *Event
+}
+
+func (h *Client) ListenHealthz() {
+	go func() {
+		err := http.ListenAndServe(h.healthzAddr,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+			}),
+		)
+		if err != nil {
+			log.Printf("healthz err: %v", err)
+		}
+	}()
 }
 
 func (h *Client) Wait() {

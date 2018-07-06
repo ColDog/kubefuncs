@@ -23,20 +23,28 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ default .Chart.Version .Values.tag }}"
+          image: "{{ .Values.image.repository }}:{{ default .Chart.Version .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/gateway
+            - --config=/etc/gateway/routes.json
           ports:
-            - name: http
-              containerPort: 80
+            - name: healthz
+              containerPort: 8080
               protocol: TCP
+          env:
+{{ toYaml .Values.env | indent 12 }}
           livenessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: healthz
           readinessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: healthz
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/gateway
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}
@@ -51,3 +59,7 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "gateway.fullname" . }}
