@@ -1,5 +1,13 @@
 functions:
-- name: test
-  command: ['/bin/http-pong']
-- name: archive
-  command: ['/bin/http-archive']
+- name: responder
+  topic: test
+  channel: responder
+  command:
+    - /bin/app
+    - -handler=responder
+- name: archiver
+  topic: test
+  channel: responder
+  command:
+    - /bin/app
+    - -handler=archiver
