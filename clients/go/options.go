@@ -24,14 +24,32 @@ func defaults() *opts {
 	}
 }
 
+// Option represents a configuration parameter.
 type Option func(o *opts)
 
-func WithLookupdURL(url string) Option   { return func(o *opts) { o.lookupdURL = url } }
-func WithNsqdURL(url string) Option      { return func(o *opts) { o.nsqdURL = url } }
-func WithClientID(id string) Option      { return func(o *opts) { o.clientID = id } }
-func WithCallEnabled() Option            { return func(o *opts) { o.rpc = true } }
-func WithTopic(topic string) Option      { return func(o *opts) { o.topic = topic } }
-func WithChannel(channel string) Option  { return func(o *opts) { o.channel = channel } }
+// WithLookupdURL configures the lookupd instance url. This defaults to the env
+// variable $NSQ_LOOKUPD_ADDR:$NSQ_LOOKUPD_PORT.
+func WithLookupdURL(url string) Option { return func(o *opts) { o.lookupdURL = url } }
+
+// WithNsqdURL configures the lookupd instance url. This defaults to the env
+// variable $NSQ_NSQD_ADDR:$NSQ_NSQD_PORT.
+func WithNsqdURL(url string) Option { return func(o *opts) { o.nsqdURL = url } }
+
+// WithClientID configures the unique client id for this instance, it defaults
+// to the hostname.
+func WithClientID(id string) Option { return func(o *opts) { o.clientID = id } }
+
+// WithCallEnabled ensures that this client can handle responses from published
+// events. This must be enabled to use the Call(...) method.
+func WithCallEnabled() Option { return func(o *opts) { o.rpc = true } }
+
+// WithTopic configures the new topic.
+func WithTopic(topic string) Option { return func(o *opts) { o.topic = topic } }
+
+// WithChannel configures the channel.
+func WithChannel(channel string) Option { return func(o *opts) { o.channel = channel } }
+
+// WithHealthzAddr adds the default healthz address.
 func WithHealthzAddr(addr string) Option { return func(o *opts) { o.healthzAddr = addr } }
 
 type opts struct {
