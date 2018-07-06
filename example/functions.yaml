@@ -1,4 +1,5 @@
-test:
+functions:
+- name: test
   command: ['/bin/http-pong']
-archive:
+- name: archive
   command: ['/bin/http-archive']
