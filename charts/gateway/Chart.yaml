@@ -1,4 +1,4 @@
 apiVersion: v1
-description: kubefuncs.io
+description: Kubefuncs gateway service
 name: gateway
 version: v0.0.1

@@ -25,4 +25,4 @@ spec:
         - --lookupd-http-address={{ template "dns.lookupd" . }}:4161
         ports:
         - name: http
-          containerPort: 4761
+          containerPort: 4171

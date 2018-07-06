@@ -1,12 +1,9 @@
 dependencies:
 - name: gateway
-  repository: file://./dependencies/gateway
+  repository: file://../gateway
   version: v0.0.1
 - name: nsq
-  repository: file://./dependencies/nsq
+  repository: file://../nsq
   version: v1.0.0-compat
-- name: prometheus
-  repository: https://kubernetes-charts.storage.googleapis.com
-  version: 6.8.0
-digest: sha256:e2167bb585a5a26a61ae12e147433656e922cab3554ed25c6556fde1b1053d8f
-generated: 2018-07-04T19:40:29.161205736-07:00
+digest: sha256:39c50a6baa1435518cce323e08402ac0dc8cf14da6ed49249421808fb1c8e947
+generated: 2018-07-05T08:32:16.414553337-07:00

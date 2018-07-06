@@ -10,7 +10,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   ports:
-  - port: 4161
+  - port: 4171
     protocol: TCP
     name: http
     targetPort: 4171

@@ -1,4 +1,4 @@
 apiVersion: v1
-description: Kubefuncs parent chart
+description: Kubefuncs chart
 name: kubefuncs
 version: v0.0.1
