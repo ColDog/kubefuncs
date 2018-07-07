@@ -3,3 +3,4 @@ vendor
 routes.json
 .vscode
 manifests
+*.tgz
