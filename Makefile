@@ -89,7 +89,7 @@ release/kubefuncs:
 release: release/function release/nsq release/gateway release/example release/kubefuncs
 	git commit -m 'Release $(KUBEFUNCS_VERSION)'
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
-	git push --all
+	git push --tags origin master
 
 test/e2e:
 	@tests/e2e.sh
