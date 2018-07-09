@@ -28,12 +28,17 @@ local/deploy-example:
 local/deploy-kubefuncs:
 	docker build -t localhost:5000/gateway:$(TAG) -f gateway/Dockerfile .
 	docker push localhost:5000/gateway:$(TAG)
-	helm dep update charts/kubefuncs
 	helm upgrade --install \
 		--set="gateway.image.repository=localhost:5000/gateway" \
 		--set="gateway.image.tag=$(TAG)" \
 		--namespace kubefuncs \
 		kubefuncs charts/kubefuncs
+
+local/setup:
+	minikube start
+	kubectl --context minikube apply -f tests/registry.yaml
+	pod_id=$$(kubectl -n kube-system get pods | grep 'registry' | awk '{print $$1}') && \
+		kubectl -n kube-system port-forward $$pod_id 5000:5000
 
 define package
 	helm init --client-only
@@ -43,7 +48,7 @@ define package
 	curl -o .repo/index.yaml $(CHART_REPO)/index.yaml || echo 'repo not initialized'
 
 	echo "charts/$(1)"
-	helm package -u -d .repo ./charts/$(1)
+	helm package -d .repo ./charts/$(1)
 	helm repo index --url $(CHART_REPO) .repo
 
 	aws s3 cp .repo/index.yaml s3://$(CHART_BUCKET)/index.yaml
@@ -73,6 +78,7 @@ release/nsq:
 	$(call package,nsq)
 
 release/kubefuncs:
+	helm dep update charts/kubefuncs
 	helm template charts/kubefuncs > charts/kubefuncs/bundle.yaml
 	$(call package,kubefuncs)
 
@@ -80,3 +86,6 @@ release: release/function release/nsq release/gateway release/example release/ku
 	git commit -m "Release $(KUBEFUNCS_VERSION)"
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --all
+
+test/e2e:
+	@tests/e2e.sh

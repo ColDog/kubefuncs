@@ -4,6 +4,6 @@ dependencies:
   version: v0.0.2
 - name: nsq
   repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
-  version: v0.0.1
-digest: sha256:49089c8aad30f0bb1a3be41dfe815675a593e21410fcfd9145803252645937a9
-generated: 2018-07-08T20:22:28.919915331-07:00
+  version: v0.0.2
+digest: sha256:fc43c350f7410534f9f3378f7aee00b08a1dfee7a70ffa1c77563611483107ac
+generated: 2018-07-08T22:13:55.64162101-07:00

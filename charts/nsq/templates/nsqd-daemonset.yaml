@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: nsqd
-        image: nsqio/nsq:{{ .Chart.APPVersion }}
+        image: nsqio/nsq:{{ .Chart.AppVersion }}
         resources:
 {{ toYaml .Values.nsqd.resources | indent 10 }}
         command:

@@ -1,0 +1,277 @@
+---
+# Source: kubefuncs/charts/gateway/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: RELEASE-NAME-gateway
+  labels:
+    app: gateway
+    chart: gateway-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+data:
+  routes.json: "{\"routes\":{\"/test/\":\"test\"}}"
+
+---
+# Source: kubefuncs/charts/gateway/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-gateway
+  labels:
+    app: gateway
+    chart: gateway-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: gateway
+    release: RELEASE-NAME
+
+---
+# Source: kubefuncs/charts/nsq/templates/admin-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: RELEASE-NAME-nsq-admin
+  labels:
+    app: nsq-admin
+    chart: nsq-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  ports:
+  - port: 4171
+    protocol: TCP
+    name: http
+    targetPort: 4171
+  selector:
+    app: nsq-admin
+
+---
+# Source: kubefuncs/charts/nsq/templates/lookupd-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: RELEASE-NAME-nsq-lookupd
+  labels:
+    app: nsq-lookupd
+    chart: nsq-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  ports:
+  - port: 4160
+    protocol: TCP
+    name: tcp
+    targetPort: 4160
+  - port: 4161
+    protocol: TCP
+    name: http
+    targetPort: 4161
+  selector:
+    app: nsq-lookupd
+
+---
+# Source: kubefuncs/charts/nsq/templates/nsqd-daemonset.yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  namespace: default
+  name: RELEASE-NAME-nsq-nsqd
+  labels:
+    app: nsq-nsqd
+    chart: nsq-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nsq-nsqd
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9117'
+    spec:
+      containers:
+      - name: nsqd
+        image: nsqio/nsq:v1.0.0-compat
+        resources:
+          {}
+          
+        command:
+        - /nsqd
+        - --lookupd-tcp-address=RELEASE-NAME-nsq-lookupd.default.svc.cluster.local:4160
+        - --broadcast-address=$(NODE_IP)
+        ports:
+        - name: tcp
+          containerPort: 4150
+          hostPort: 4150
+        - name: http
+          containerPort: 4151
+          hostPort: 4151
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+      - name: exporter
+        image: lovoo/nsq_exporter:latest
+        command:
+        - /nsq_exporter
+        - -nsqd.addr=http://$(NODE_IP):4151
+        ports:
+        - name: http
+          containerPort: 9117
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+
+---
+# Source: kubefuncs/charts/gateway/templates/deployment.yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-gateway
+  labels:
+    app: gateway
+    chart: gateway-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+      release: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app: gateway
+        release: RELEASE-NAME
+      annotations:
+        kubefuncs.io/checksum-config: 50a71f6c4a919832c624ee33714a014fc498aed339a09c4ec332d2d78eb72990
+    spec:
+      containers:
+        - name: gateway
+          image: "coldog/kubefuncs-gateway:v0.0.2"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/gateway
+            - --config=/etc/gateway/routes.json
+          ports:
+            - name: healthz
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NSQ_NSQD_PORT
+              value: "4150"
+            - name: NSQ_NSQD_ADDR
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQ_LOOKUPD_ADDR
+              value: kubefuncs-nsq-lookupd.kubefuncs.svc.cluster.local
+            - name: NSQ_LOOKUPD_PORT
+              value: "4161"
+            
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/gateway
+          resources:
+            {}
+            
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-gateway
+
+---
+# Source: kubefuncs/charts/nsq/templates/admin-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: RELEASE-NAME-nsq-admin
+  labels:
+    app: nsq-admin
+    chart: nsq-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nsq-admin
+    spec:
+      containers:
+      - name: nsq-admin
+        image: nsqio/nsq:v1.0.0-compat
+        resources:
+          {}
+          
+        command:
+        - /nsqadmin
+        - --lookupd-http-address=RELEASE-NAME-nsq-lookupd.default.svc.cluster.local:4161
+        ports:
+        - name: http
+          containerPort: 4171
+
+---
+# Source: kubefuncs/charts/nsq/templates/lookupd-deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: RELEASE-NAME-nsq-lookupd
+  labels:
+    app: nsq-lookupd
+    chart: nsq-v0.0.2
+    release: RELEASE-NAME
+    heritage: Tiller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nsq-lookupd
+    spec:
+      containers:
+      - name: nsq-lookupd
+        image: nsqio/nsq:v1.0.0-compat
+        resources:
+          {}
+          
+        command:
+        - /nsqlookupd
+        ports:
+        - name: tcp
+          containerPort: 4160
+        - name: http
+          containerPort: 4161
+
+---
+# Source: kubefuncs/charts/gateway/templates/ingress.yaml
+
+

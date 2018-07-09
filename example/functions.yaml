@@ -3,15 +3,6 @@ image:
   tag: latest
 
 functions:
-- name: responder
-  topic: test
-  channel: responder
+- name: test
   command:
-    - /bin/app
-    - -handler=responder
-- name: archiver
-  topic: test
-  channel: responder
-  command:
-    - /bin/app
-    - -handler=archiver
+  - /bin/app

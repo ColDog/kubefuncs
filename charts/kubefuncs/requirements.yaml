@@ -3,5 +3,5 @@ dependencies:
   version: v0.0.2
   repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
 - name: nsq
-  version: v0.0.1
+  version: v0.0.2
   repository: https://s3.amazonaws.com/kubefuncs-chart-repository/

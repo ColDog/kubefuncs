@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: {{ template "lookupd.name" . }}
-        image: nsqio/nsq:{{ .Chart.APPVersion }}
+        image: nsqio/nsq:{{ .Chart.AppVersion }}
         resources:
 {{ toYaml .Values.lookupd.resources | indent 10 }}
         command:

@@ -50,9 +50,9 @@ spec:
               port: healthz
           env:
             - name: TOPIC
-              value: {{ default $function.topic $function.name }}
+              value: {{ default $function.name $function.topic }}
             - name: CHANNEL
-              value: {{ default $function.channel "default" }}
+              value: {{ default "default" $function.channel }}
 {{ default $values.defaults.env $function.env | toYaml | indent 12 }}
 {{- with default $values.defaults.resources $function.resources }}
           resources:
