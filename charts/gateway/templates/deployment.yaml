@@ -28,20 +28,21 @@ spec:
           command:
             - /bin/gateway
             - --config=/etc/gateway/routes.json
+            - --listen-addr=0.0.0.0:80
           ports:
-            - name: healthz
-              containerPort: 8080
+            - name: http
+              containerPort: 80
               protocol: TCP
           env:
 {{ toYaml .Values.env | indent 12 }}
           livenessProbe:
             httpGet:
               path: /healthz
-              port: healthz
+              port: http
           readinessProbe:
             httpGet:
               path: /healthz
-              port: healthz
+              port: http
           volumeMounts:
             - name: config-volume
               mountPath: /etc/gateway

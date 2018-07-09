@@ -1,17 +1,8 @@
 #!/bin/bash
 
-POD=$(kubectl -n kubefuncs get pods | grep gateway | awk '{print $1}' | head -n 1)
-kubectl -n kubefuncs port-forward "$POD" 8080:8080 &
-pid=$!
-
-sleep 1
+ip=$(minikube ip | tr -d '\n')
 
 echo "sending request"
-curl --fail -i localhost:8080/test/hello || {
-  kill $pid
-  exit 1
-}
+curl --fail -i -H 'Host: gateway.local' http://$ip/test/hello || exit 1
 
-wrk http://localhost:8080/test/hello
-
-kill $pid
+wrk -H 'Host: gateway.local' http://$ip/test/hello

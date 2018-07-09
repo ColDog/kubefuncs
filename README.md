@@ -175,3 +175,14 @@ Metrics are exported in Prometheus format by client libraries and NSQ.
 ### Gateway
 
 Listens to HTTP requests and dispatches a request to a specific topic. This is a default component but is built on top of the core client libraries.
+
+## Developing
+
+Required tools:
+
+* `make`
+* `minikube`
+* `wrk`
+* `docker`
+
+Run `make local/setup` to get your minikube installation going. You can then run `make local/deploy-kubefuncs` and `make local/deploy-example` to deploy the kubefuncs package and example app. Once this is setup, `make test/e2e` runs some basic e2e tests.

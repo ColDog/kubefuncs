@@ -1,6 +1,8 @@
+# NOTE: When developing on charts it's helpful to change them to use
+# file://... references.
 dependencies:
 - name: gateway
-  version: v0.0.2
+  version: v0.0.3
   repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
 - name: nsq
   version: v0.0.2

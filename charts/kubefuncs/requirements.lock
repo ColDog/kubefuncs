@@ -1,9 +1,9 @@
 dependencies:
 - name: gateway
-  repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
+  repository: file://../gateway
   version: v0.0.2
 - name: nsq
-  repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
+  repository: file://../nsq
   version: v0.0.2
-digest: sha256:fc43c350f7410534f9f3378f7aee00b08a1dfee7a70ffa1c77563611483107ac
-generated: 2018-07-08T22:13:55.64162101-07:00
+digest: sha256:2f92307cd024d75a027ee23ca3a63eed8f2018c3049d1cc7952bf5fe703dea81
+generated: 2018-07-09T07:07:01.9052139-07:00

@@ -1,0 +1,11 @@
+gateway:
+  ingress:
+    enabled: true
+    hosts:
+    - gateway.local
+    path: /
+
+  config:
+    routes:
+      /test/: test
+      /ping/: test

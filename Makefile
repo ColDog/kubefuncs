@@ -28,7 +28,9 @@ local/deploy-example:
 local/deploy-kubefuncs:
 	docker build -t localhost:5000/gateway:$(TAG) -f gateway/Dockerfile .
 	docker push localhost:5000/gateway:$(TAG)
+	helm dep update charts/kubefuncs
 	helm upgrade --install \
+		--values=example/gateway.yaml \
 		--set="gateway.image.repository=localhost:5000/gateway" \
 		--set="gateway.image.tag=$(TAG)" \
 		--namespace kubefuncs \
@@ -37,6 +39,8 @@ local/deploy-kubefuncs:
 local/setup:
 	minikube start
 	kubectl --context minikube apply -f tests/registry.yaml
+	kubectl --context minikube apply -f tests/ingress.yaml
+	kubectl label node minikube role=ingress-controller
 	pod_id=$$(kubectl -n kube-system get pods | grep 'registry' | awk '{print $$1}') && \
 		kubectl -n kube-system port-forward $$pod_id 5000:5000
 
@@ -83,7 +87,6 @@ release/kubefuncs:
 	$(call package,kubefuncs)
 
 release: release/function release/nsq release/gateway release/example release/kubefuncs
-	git commit -m "Release $(KUBEFUNCS_VERSION)"
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --all
 
