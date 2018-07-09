@@ -6,7 +6,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.2
+    chart: gateway-v0.0.3
     release: RELEASE-NAME
     heritage: Tiller
 data:
@@ -20,7 +20,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.2
+    chart: gateway-v0.0.3
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -147,7 +147,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.2
+    chart: gateway-v0.0.3
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -166,14 +166,15 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: "coldog/kubefuncs-gateway:v0.0.2"
+          image: "coldog/kubefuncs-gateway:v0.0.3"
           imagePullPolicy: IfNotPresent
           command:
             - /bin/gateway
             - --config=/etc/gateway/routes.json
+            - --listen-addr=0.0.0.0:80
           ports:
-            - name: healthz
-              containerPort: 8080
+            - name: http
+              containerPort: 80
               protocol: TCP
           env:
             - name: NSQ_NSQD_PORT
@@ -190,11 +191,11 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: healthz
+              port: http
           readinessProbe:
             httpGet:
               path: /healthz
-              port: healthz
+              port: http
           volumeMounts:
             - name: config-volume
               mountPath: /etc/gateway
