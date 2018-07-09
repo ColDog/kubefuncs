@@ -2,6 +2,10 @@
 
 Client libraries are the core concept behind kubefuncs. This describes the specification that all client libraries should implement. Documentation is generated for each client.
 
+## Releases
+
+Each client is versioned separately.
+
 ## Specification
 
 ### Environment Variables

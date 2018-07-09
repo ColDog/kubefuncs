@@ -52,6 +52,9 @@ define package
 		s3://$(CHART_BUCKET)/$(1)-$(shell cat charts/$(1)/Chart.yaml | grep version | awk '{print $$2}').tgz
 endef
 
+build/proto:
+	cd clients/proto && ./build.sh
+
 release/function:
 	$(call package,function)
 

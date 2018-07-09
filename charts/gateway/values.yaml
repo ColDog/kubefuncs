@@ -1,7 +1,3 @@
-# Default values for gateway.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 replicaCount: 1
 
 image:
@@ -44,14 +40,13 @@ tolerations: []
 
 affinity: {}
 
-# Gateway configuration.
-# TODO: Document.
+# Gateway configuration, the routes map accepts a key value pair of strings. The
+# key is a prefix mapping to the function that should be called.
 config:
   routes:
     /test/: test
 
-# Gateway default environment variables.
-# TODO: Document.
+# Gateway default environment variables. These work with the default client.
 env:
   - name: NSQ_NSQD_PORT
     value: "4150"

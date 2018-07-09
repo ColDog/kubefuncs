@@ -1,8 +1,10 @@
+# Image specification. These values must be set by the user.
 image:
   repository: null
   tag: null
   pullPolicy: IfNotPresent
 
+# Default configuration, these will be applied to functions as a default value.
 defaults:
   replicas: 1
   resources: {}
@@ -22,4 +24,22 @@ defaults:
     - name: NSQ_LOOKUPD_PORT
       value: '4161'
 
+# The functions block defines a list of function objects. A function object
+# includes the following fields:
+# - name: The name of the function and default topic name.
+# - channel: The nsq channel of the function.
+# - command: Kubernetes command.
+# - replicas: Replica count for the initial pool.
+# - resources: Kubernetes resources block.
+# - nodeSelector: Kubernetes nodeSelector block.
+# - tolerations: Kubernetes tolerations block.
+# - affinity: Kubernetes affinity block.
+# - command: Kubernetes command block.
+# - env: Kubernetes env block.
 functions: []
+# - name: archiver
+#   topic: test
+#   channel: responder
+#   command:
+#     - /bin/app
+#     - -handler=archiver
