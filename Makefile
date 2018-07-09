@@ -87,6 +87,7 @@ release/kubefuncs:
 	$(call package,kubefuncs)
 
 release: release/function release/nsq release/gateway release/example release/kubefuncs
+	git commit -m 'Release $(KUBEFUNCS_VERSION)'
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --all
 
