@@ -61,3 +61,9 @@ func (m *Message) Respond(payload proto.Message) error {
 type Handler interface {
 	Handle(ev *Message) error
 }
+
+// HandlerFunc allows to specify a function as a handler.
+type HandlerFunc func(ev *Message) error
+
+// Handle implements the Handler interface.
+func (h HandlerFunc) Handle(ev *Message) error { return h(ev) }

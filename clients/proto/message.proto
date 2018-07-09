@@ -13,6 +13,7 @@ message Event {
   // Return is a return topic, this will be set by the client libraries Call()
   // method.
   string return = 3;
+  // Payload is the event payload. It can be any protobuf type.
   google.protobuf.Any payload = 4;
 }
 

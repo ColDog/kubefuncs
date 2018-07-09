@@ -1,3 +1,7 @@
+image:
+  repository: coldog/kubefuncs-example
+  tag: latest
+
 functions:
 - name: responder
   topic: test
