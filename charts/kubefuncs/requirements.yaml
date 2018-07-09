@@ -1,7 +1,7 @@
 dependencies:
 - name: gateway
-  version: v0.0.1
-  repository: "file://../gateway"
+  version: v0.0.2
+  repository: https://s3.amazonaws.com/kubefuncs-chart-repository/
 - name: nsq
-  version: v1.0.0-compat
-  repository: "file://../nsq"
+  version: v0.0.1
+  repository: https://s3.amazonaws.com/kubefuncs-chart-repository/

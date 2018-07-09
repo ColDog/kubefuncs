@@ -3,7 +3,10 @@ FUNCTION_VERSION := $(shell cat charts/function/Chart.yaml | grep version | awk 
 KUBEFUNCS_VERSION := $(shell cat charts/kubefuncs/Chart.yaml | grep version | awk '{print $$2}')
 NSQ_VERSION := $(shell cat charts/nsq/Chart.yaml | grep version | awk '{print $$2}')
 
-export AWS_PROFILE=personal
+CHART_BUCKET := kubefuncs-chart-repository
+CHART_REPO := https://s3.amazonaws.com/$(CHART_BUCKET)
+
+export AWS_PROFILE=kubefuncs
 export AWS_REGION=us-east-1
 
 # Allocate a random tag to always rebuild.
@@ -32,40 +35,45 @@ local/deploy-kubefuncs:
 		--namespace kubefuncs \
 		kubefuncs charts/kubefuncs
 
-release/gateway-docker:
+define package
+	helm init --client-only
+	helm repo add kubefuncs $(CHART_REPO)
+
+	mkdir -p .repo
+	curl -o .repo/index.yaml $(CHART_REPO)/index.yaml || echo 'repo not initialized'
+
+	echo "charts/$(1)"
+	helm package -u -d .repo ./charts/$(1)
+	helm repo index --url $(CHART_REPO) .repo
+
+	aws s3 cp .repo/index.yaml s3://$(CHART_BUCKET)/index.yaml
+	aws s3 cp \
+		.repo/$(1)-$(shell cat charts/$(1)/Chart.yaml | grep version | awk '{print $$2}').tgz \
+		s3://$(CHART_BUCKET)/$(1)-$(shell cat charts/$(1)/Chart.yaml | grep version | awk '{print $$2}').tgz
+endef
+
+release/function:
+	$(call package,function)
+
+release/gateway:
 	docker build -t coldog/kubefuncs-gateway:$(GATEWAY_VERSION) -f gateway/Dockerfile .
 	docker tag coldog/kubefuncs-gateway:$(GATEWAY_VERSION) coldog/kubefuncs-gateway:latest
 	docker push coldog/kubefuncs-gateway:$(GATEWAY_VERSION)
 	docker push coldog/kubefuncs-gateway:latest
-
-release/helm-init:
-	helm s3 init s3://kubefuncs-chart-registry
-	helm repo add kubefuncs s3://kubefuncs-chart-registry
-
-release/function:
-	helm package ./charts/function
-	helm s3 push ./function-$(FUNCTION_VERSION).tgz kubefuncs
-
-release/gateway: release/docker-gateway
-	helm package ./charts/gateway
-	helm s3 push ./gateway-$(GATEWAY_VERSION).tgz kubefuncs
+	$(call package,gateway)
 
 release/example:
 	docker build -t coldog/kubefuncs-example:latest -f example/Dockerfile .
 	docker push coldog/kubefuncs-example:latest
 
 release/nsq:
-	helm package ./charts/nsq
-	helm s3 push ./nsq-$(NSQ_VERSION).tgz nsq
+	$(call package,nsq)
 
-release/kubefuncs-bundle:
+release/kubefuncs:
 	helm template charts/kubefuncs > charts/kubefuncs/bundle.yaml
+	$(call package,kubefuncs)
 
-release/kubefuncs: release/kubefuncs-bundle
-	helm dep update ./charts/kubefuncs
-	helm package ./charts/kubefuncs
-	helm s3 push ./kubefuncs-$(KUBEFUNCS_VERSION).tgz nsq
-
+release: release/function release/nsq release/gateway release/example release/kubefuncs
 	git commit -m "Release $(KUBEFUNCS_VERSION)"
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --all

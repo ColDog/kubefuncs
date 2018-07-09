@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: {{ template "admin.name" . }}
-        image: nsqio/nsq:{{ .Chart.Version }}
+        image: nsqio/nsq:{{ .Chart.APPVersion }}
         resources:
 {{ toYaml .Values.admin.resources | indent 10 }}
         command:
