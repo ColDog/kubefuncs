@@ -30,16 +30,25 @@ The message handling should implement this behaviour:
 
 ```python
 def handle_event(msg, handler):
-  event = unmarshal(msg.body)
+  try:
+    event = unmarshal(msg.body)
+  except MarshalError: # on MarshalError give up.
+    return
 
+  error = None
   try:
     response = handler(event)
   except Exception as e:
-    response = proto.Error(str(e))
-
-  if response is None:
-    response = proto.Empty()
+    error = e
 
   if event.Return:
-    send(event.Return, response)
+    # If there is a return, let's send it something.
+    if error:
+      response = proto.Error(error)
+    if respons is None:
+      response = proto.Empty()
+    return send(event.Return, response)
+  else:
+    # Returning an error will requeue the message.
+    return error
 ```

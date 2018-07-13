@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  nsqlookup:
+    image: nsqio/nsq
+    hostname: nsqlookup
+    network_mode: host
+    command: /nsqlookupd
+
+  nsq:
+    image: nsqio/nsq
+    hostname: nsq
+    network_mode: host
+    command: /nsqd --broadcast-address 127.0.0.1 --lookupd-tcp-address=127.0.0.1:4160

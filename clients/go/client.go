@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/golang/protobuf/proto"
@@ -14,13 +13,19 @@ import (
 
 // Run sets up an opinionated client.
 func Run(handler Handler, options ...Option) error {
+	done := make(chan struct{}, 1)
+
+	// TODO: Close when receive exit signal.
+
 	c, err := NewClient(options...)
 	if err != nil {
 		return err
 	}
 	c.ListenHealthz()
 	c.OnDefault(handler)
-	c.Wait()
+
+	<-done
+	c.Close()
 	return nil
 }
 
@@ -31,25 +36,19 @@ func NewClient(options ...Option) (*Client, error) {
 	for _, o := range options {
 		o(opts)
 	}
-	h := &Client{
-		opts:      *opts,
-		responses: map[string]chan *Event{},
-	}
-	if err := h.setupProducer(); err != nil {
+	c, err := newNsqClient(opts.nsqdURL, opts.lookupdURL)
+	if err != nil {
 		return nil, err
 	}
-	if opts.rpc {
-		h.returnTopic = "rpc-" + opts.clientID + "#ephemeral"
-		if err := h.Emit(
-			context.Background(), &Event{Id: "ping", Topic: h.returnTopic}); err != nil {
-			return nil, err
-		}
 
-		if err := h.subscribe(
-			h.returnTopic,
-			"default#ephemeral",
-			nsq.HandlerFunc(h.handleResponse),
-		); err != nil {
+	h := &Client{
+		opts:      *opts,
+		nsq:       c,
+		responses: map[string]chan *Event{},
+	}
+	if opts.rpc {
+		err = h.setupReturn(opts)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -61,12 +60,28 @@ func NewClient(options ...Option) (*Client, error) {
 type Client struct {
 	opts
 
+	nsq         nsqClient
 	returnTopic string
 	lock        sync.RWMutex
-	producer    *nsq.Producer
-	consumers   []*nsq.Consumer
 
 	responses map[string]chan *Event
+}
+
+func (h *Client) setupReturn(opts *opts) error {
+	h.returnTopic = "rpc-" + opts.clientID + "#ephemeral"
+	if err := h.Emit(
+		context.Background(), &Event{Id: "ping", Topic: h.returnTopic}); err != nil {
+		return err
+	}
+
+	if err := h.nsq.subscribe(
+		h.returnTopic,
+		"default#ephemeral",
+		nsq.HandlerFunc(h.handleResponse),
+	); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ListenHealthz opens an http server to provide health checks. Returns after
@@ -84,22 +99,8 @@ func (h *Client) ListenHealthz() {
 	}()
 }
 
-// Wait for consumers to finish.
-func (h *Client) Wait() {
-	for _, c := range h.consumers {
-		<-c.StopChan
-	}
-}
-
 // Close all producers and consumers.
-func (h *Client) Close() {
-	if h.producer != nil {
-		h.producer.Stop()
-	}
-	for _, c := range h.consumers {
-		c.Stop()
-	}
-}
+func (h *Client) Close() { h.nsq.close() }
 
 // Emit will asyncronously publish a message and will not wait for any
 // responses.
@@ -108,7 +109,7 @@ func (h *Client) Emit(ctx context.Context, ev *Event) error {
 	if err != nil {
 		return err
 	}
-	return h.producer.PublishAsync(ev.Topic, data, nil)
+	return h.nsq.publish(ev.Topic, data)
 }
 
 // Call will publish a message and wait on a return queueu.
@@ -134,14 +135,13 @@ func (h *Client) On(topic, channel string, handler Handler) {
 	// This is a minor sanity check.
 	h.Emit(context.Background(), &Event{Id: "ping", Topic: topic})
 
-	h.subscribe(topic, channel, nsq.HandlerFunc(func(msg *nsq.Message) error {
+	h.nsq.subscribe(topic, channel, nsq.HandlerFunc(func(msg *nsq.Message) error {
 		// Unmarshal the provided event. If this fails, this message should just
 		// be removed as it is unprocessable.
 		ev := &Event{}
 		if err := proto.Unmarshal(msg.Body, ev); err != nil {
-			msg.Finish()
 			log.Printf("failing marshal: %v", err)
-			return err
+			return nil // Return nil to not requeue.
 		}
 
 		// If the event id is a ping then we should continue.
@@ -158,18 +158,14 @@ func (h *Client) On(topic, channel string, handler Handler) {
 		// a return queue, we return the message and finish the response.
 		if err := handler.Handle(wrap); err != nil {
 			if ev.Return != "" {
-				data, err := proto.Marshal(&Error{Error: err.Error()})
-				if err != nil {
-					return err // This should never happen.
-				}
-
-				// Publish the response and return nil.
-				return h.producer.PublishAsync(ev.Return, data, nil)
+				// Add a response.
+				err := wrap.Respond(&Error{Error: err.Error()})
+				log.Printf("handler error: %v, %+v", err, wrap.Response)
+			} else {
+				// If we've received a handler error, and no return queue, respond
+				// with an error so this is re-queued.
+				return err
 			}
-
-			// If we've received a handler error, and no return queue, respond
-			// with an error so this is re-queued.
-			return err
 		}
 
 		// If we processed successfully and the return queue is present, we
@@ -185,11 +181,13 @@ func (h *Client) On(topic, channel string, handler Handler) {
 			// Marshal the response value.
 			data, err := proto.Marshal(wrap.Response)
 			if err != nil {
-				return err // This should never happen.
+				return err
 			}
 
+			log.Printf("publishing return: %+v", wrap.Response)
+
 			// Publish the response.
-			return h.producer.PublishAsync(ev.Return, data, nil)
+			return h.nsq.publish(ev.Return, data)
 		}
 		return nil
 	}))
@@ -198,31 +196,6 @@ func (h *Client) On(topic, channel string, handler Handler) {
 // OnDefault executes the handler for the default configured topic and channel.
 func (h *Client) OnDefault(handler Handler) {
 	h.On(h.topic, h.channel, handler)
-}
-
-func (h *Client) setupProducer() error {
-	producer, err := nsq.NewProducer(h.nsqdURL, nsq.NewConfig())
-	if err != nil {
-		return err
-	}
-	producer.SetLogger(log.New(os.Stderr, "[nsq] ", log.LstdFlags), nsq.LogLevelDebug)
-	h.producer = producer
-	return nil
-}
-
-func (h *Client) subscribe(topic, channel string, handler nsq.Handler) error {
-	consumer, err := nsq.NewConsumer(topic, channel, nsq.NewConfig())
-	if err != nil {
-		return err
-	}
-	consumer.SetLogger(log.New(os.Stderr, "[nsq] ", log.LstdFlags), nsq.LogLevelDebug)
-	consumer.AddHandler(handler)
-	h.consumers = append(h.consumers, consumer)
-	err = consumer.ConnectToNSQLookupd(h.lookupdURL)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (h *Client) handleResponse(msg *nsq.Message) error {
@@ -248,7 +221,11 @@ func (h *Client) handleResponse(msg *nsq.Message) error {
 		return nil
 	}
 
-	c <- r
+	select {
+	case c <- r:
+	default:
+		log.Printf("deadlock")
+	}
 	return nil
 }
 
