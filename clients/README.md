@@ -32,7 +32,8 @@ The message handling should implement this behaviour:
 def handle_event(msg, handler):
   try:
     event = unmarshal(msg.body)
-  except MarshalError: # on MarshalError give up.
+  except MarshalError: # on MarshalError give up
+    finish(msg).
     return
 
   error = None
@@ -47,8 +48,10 @@ def handle_event(msg, handler):
       response = proto.Error(error)
     if respons is None:
       response = proto.Empty()
-    return send(event.Return, response)
+    finish(msg)
+    send(event.Return, response)
   else:
-    # Returning an error will requeue the message.
-    return error
+    # Requeue the message up to the configured max attempts.
+    if error:
+      retry(msg)
 ```

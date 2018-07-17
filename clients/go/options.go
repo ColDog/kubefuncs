@@ -1,6 +1,9 @@
 package kubefuncs
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 func env(name, defaults string) string {
 	val := os.Getenv(name)
@@ -8,6 +11,19 @@ func env(name, defaults string) string {
 		return defaults
 	}
 	return val
+}
+
+type opts struct {
+	lookupdURL   string
+	nsqdURL      string
+	clientID     string
+	topic        string
+	channel      string
+	rpc          bool
+	healthzAddr  string
+	mockClient   bool
+	logger       *log.Logger
+	logVerbosity uint
 }
 
 func defaults() *opts {
@@ -21,6 +37,7 @@ func defaults() *opts {
 			":" + env("NSQ_NSQD_PORT", "4150"),
 		clientID:    hostname,
 		healthzAddr: env("HEALTHZ_ADDR", ":8080"),
+		logger:      log.New(os.Stderr, "[ksc] ", log.LstdFlags),
 	}
 }
 
@@ -52,12 +69,11 @@ func WithChannel(channel string) Option { return func(o *opts) { o.channel = cha
 // WithHealthzAddr adds the default healthz address.
 func WithHealthzAddr(addr string) Option { return func(o *opts) { o.healthzAddr = addr } }
 
-type opts struct {
-	lookupdURL  string
-	nsqdURL     string
-	clientID    string
-	topic       string
-	channel     string
-	rpc         bool
-	healthzAddr string
-}
+// WithMockClient will use an in memory nsq client.
+func WithMockClient() Option { return func(o *opts) { o.mockClient = true } }
+
+// WithLogger will use the provided logger.
+func WithLogger(l *log.Logger) Option { return func(o *opts) { o.logger = l } }
+
+// WithLogVerbosity will use the provided logger.
+func WithLogVerbosity(level uint) Option { return func(o *opts) { o.logVerbosity = level } }

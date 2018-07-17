@@ -3,12 +3,11 @@ package kubefuncs
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"sync"
 
+	"github.com/coldog/kubefuncs/clients/go/message"
 	"github.com/golang/protobuf/proto"
-	nsq "github.com/nsqio/go-nsq"
 )
 
 // Run sets up an opinionated client.
@@ -36,23 +35,28 @@ func NewClient(options ...Option) (*Client, error) {
 	for _, o := range options {
 		o(opts)
 	}
-	c, err := newNsqClient(opts.nsqdURL, opts.lookupdURL)
-	if err != nil {
-		return nil, err
+	var nsq message.Client
+
+	if opts.mockClient {
+		nsq = message.NewMockClient()
+	} else {
+		c, err := message.NewNSQClient(opts.nsqdURL, opts.lookupdURL, opts.logger)
+		if err != nil {
+			return nil, err
+		}
+		nsq = c
 	}
 
 	h := &Client{
 		opts:      *opts,
-		nsq:       c,
+		nsq:       nsq,
 		responses: map[string]chan *Event{},
 	}
 	if opts.rpc {
-		err = h.setupReturn(opts)
-		if err != nil {
+		if err := h.setupReturn(opts); err != nil {
 			return nil, err
 		}
 	}
-	log.Printf("client initialized: %+v", *opts)
 	return h, nil
 }
 
@@ -60,7 +64,7 @@ func NewClient(options ...Option) (*Client, error) {
 type Client struct {
 	opts
 
-	nsq         nsqClient
+	nsq         message.Client
 	returnTopic string
 	lock        sync.RWMutex
 
@@ -74,11 +78,8 @@ func (h *Client) setupReturn(opts *opts) error {
 		return err
 	}
 
-	if err := h.nsq.subscribe(
-		h.returnTopic,
-		"default#ephemeral",
-		nsq.HandlerFunc(h.handleResponse),
-	); err != nil {
+	if err := h.nsq.Subscribe(
+		h.returnTopic, "default#ephemeral", h.handleResponse); err != nil {
 		return err
 	}
 	return nil
@@ -94,13 +95,13 @@ func (h *Client) ListenHealthz() {
 			}),
 		)
 		if err != nil {
-			log.Printf("healthz err: %v", err)
+			h.log(0, "healthz err: %v", err)
 		}
 	}()
 }
 
 // Close all producers and consumers.
-func (h *Client) Close() { h.nsq.close() }
+func (h *Client) Close() { h.nsq.Close() }
 
 // Emit will asyncronously publish a message and will not wait for any
 // responses.
@@ -109,7 +110,7 @@ func (h *Client) Emit(ctx context.Context, ev *Event) error {
 	if err != nil {
 		return err
 	}
-	return h.nsq.publish(ev.Topic, data)
+	return h.nsq.Publish(ev.Topic, data)
 }
 
 // Call will publish a message and wait on a return queueu.
@@ -131,28 +132,25 @@ func (h *Client) Call(ctx context.Context, ev *Event) (*Message, error) {
 // On will execute the provided handler for all messages along the provided
 // queue and channel.
 func (h *Client) On(topic, channel string, handler Handler) {
-	// Publish a specific ping message to the topic, let's see if we get it.
-	// This is a minor sanity check.
-	h.Emit(context.Background(), &Event{Id: "ping", Topic: topic})
-
-	h.nsq.subscribe(topic, channel, nsq.HandlerFunc(func(msg *nsq.Message) error {
+	h.nsq.Subscribe(topic, channel, func(body []byte) error {
 		// Unmarshal the provided event. If this fails, this message should just
 		// be removed as it is unprocessable.
 		ev := &Event{}
-		if err := proto.Unmarshal(msg.Body, ev); err != nil {
-			log.Printf("failing marshal: %v", err)
+		if err := proto.Unmarshal(body, ev); err != nil {
+			h.log(4, "failing marshal: %v", err)
 			return nil // Return nil to not requeue.
 		}
 
-		// If the event id is a ping then we should continue.
+		// If the event id is a ping then we should continue. This is to allow
+		// for healthchecks.
 		if ev.Id == "ping" {
-			log.Println("ping received")
+			h.log(4, "ping received")
 			return nil
 		}
 
 		// Wrap the event in the message struct.
 		wrap := &Message{Event: ev}
-		log.Printf("handling: %v", ev)
+		h.log(5, "handling: %v", ev)
 
 		// Handle the provided message. If we get an error message and we have
 		// a return queue, we return the message and finish the response.
@@ -160,7 +158,7 @@ func (h *Client) On(topic, channel string, handler Handler) {
 			if ev.Return != "" {
 				// Add a response.
 				err := wrap.Respond(&Error{Error: err.Error()})
-				log.Printf("handler error: %v, %+v", err, wrap.Response)
+				h.log(4, "handler error: %v, %+v", err, wrap.Response)
 			} else {
 				// If we've received a handler error, and no return queue, respond
 				// with an error so this is re-queued.
@@ -184,13 +182,13 @@ func (h *Client) On(topic, channel string, handler Handler) {
 				return err
 			}
 
-			log.Printf("publishing return: %+v", wrap.Response)
+			h.log(4, "publishing return: %+v", wrap.Response)
 
 			// Publish the response.
-			return h.nsq.publish(ev.Return, data)
+			return h.nsq.Publish(ev.Return, data)
 		}
 		return nil
-	}))
+	})
 }
 
 // OnDefault executes the handler for the default configured topic and channel.
@@ -198,18 +196,16 @@ func (h *Client) OnDefault(handler Handler) {
 	h.On(h.topic, h.channel, handler)
 }
 
-func (h *Client) handleResponse(msg *nsq.Message) error {
-	defer msg.Finish()
-
+func (h *Client) handleResponse(body []byte) error {
 	r := &Event{}
-	err := proto.Unmarshal(msg.Body, r)
+	err := proto.Unmarshal(body, r)
 	if err != nil {
-		log.Printf("failed to decode: %v", err)
+		h.log(0, "failed to decode: %v", err)
 		return nil
 	}
 
 	if r.Id == "ping" {
-		log.Printf("ping successful")
+		h.log(4, "ping successful")
 		return nil
 	}
 
@@ -217,15 +213,11 @@ func (h *Client) handleResponse(msg *nsq.Message) error {
 	c, ok := h.responses[r.Id]
 	h.lock.RUnlock()
 	if !ok {
-		log.Printf("response not found %s: %+v", r.Id, h.responses)
+		h.log(4, "response not found %s: %+v", r.Id, h.responses)
 		return nil
 	}
 
-	select {
-	case c <- r:
-	default:
-		log.Printf("deadlock")
-	}
+	c <- r
 	return nil
 }
 
@@ -245,5 +237,11 @@ func (h *Client) wait(ctx context.Context, id string) (*Event, error) {
 		return res, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
+	}
+}
+
+func (h *Client) log(level uint, msg string, args ...interface{}) {
+	if h.logger != nil && level >= h.logVerbosity {
+		h.logger.Printf(msg, args...)
 	}
 }
