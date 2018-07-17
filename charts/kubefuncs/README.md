@@ -1,9 +1,9 @@
-# kubefuncs
+# Kubefuncs
 
 Installs all components needed to run Kubefuncs. This includes the following subcharts:
 
-* [Gateway](../gateway)
-* [NSQ](../nsq)
+* [Gateway](charts/gateway/README.md)
+* [NSQ](charts/nsq/README.md)
 
 ## Prerequisites
 

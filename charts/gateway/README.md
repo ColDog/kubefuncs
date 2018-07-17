@@ -1,6 +1,6 @@
-# kubefuncs
+# Gateway
 
-Install the kubefuncs [gateway](../gateway).
+Install the kubefuncs [gateway](gateway/README.md).
 
 ## Prerequisites
 

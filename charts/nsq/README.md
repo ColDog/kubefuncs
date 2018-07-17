@@ -1,6 +1,6 @@
-# nsq
+# NSQ
 
-Installs NSQ onto the cluster. Provides a DaemonSet for nsq nodes as well as a service for NSQLookupD.
+Installs [NSQ](nsq.io) onto the cluster. Provides a DaemonSet for nsq nodes as well as a service for NSQLookupD.
 
 ## Prerequisites
 

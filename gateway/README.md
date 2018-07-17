@@ -1,3 +1,3 @@
-# gateway
+# Gateway
 
-View the helm chart [gateway](../charts/gateway).
+TODO

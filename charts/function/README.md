@@ -1,6 +1,6 @@
-# function
+# Function
 
-Base template for a kubefuncs application. Read the getting started [guide](../README.md) for an example.
+Base template for a kubefuncs application. Read the getting started [guide](example/README.md) for an example.
 
 ## Prerequisites
 

@@ -93,3 +93,16 @@ release: release/function release/nsq release/gateway release/example release/ku
 
 test/e2e:
 	@tests/e2e.sh
+
+
+deploy/docs:
+	aws s3 sync ./ s3://kubefuncs.io \
+		--exclude "*" \
+		--include "charts/*.md" \
+		--include "clients/*.md" \
+		--include "gateway/*.md" \
+		--include "example/*.md" \
+		--include "_coverpage.md" \
+		--include "_sidebar.md" \
+		--include "README.md" \
+		--include "index.html"

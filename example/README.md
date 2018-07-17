@@ -1,12 +1,9 @@
-# example
-
-This is an example application that receives HTTP requests and sends responses.
-
-Read the getting started [guide](../#getting-started) for more information.
-
 ## Getting Started
 
+This guide will walk us through building a cluster.
+
 Requirements:
+
 - A running Kubernetes cluster.
 - Helm cli installed.
 

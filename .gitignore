@@ -4,3 +4,4 @@ routes.json
 manifests
 *.tgz
 .repo
+node_modules
