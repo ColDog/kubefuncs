@@ -6,6 +6,8 @@ image:
 
 # Default configuration, these will be applied to functions as a default value.
 defaults:
+  targetCPUUtilizationPercentage: 80
+  maxReplicas: 10
   replicas: 1
   resources: {}
   nodeSelector: {}
@@ -26,10 +28,12 @@ defaults:
 
 # The functions block defines a list of function objects. A function object
 # includes the following fields:
+# - targetCPUUtilizationPercentage: Scale cpu utilization number.
 # - name: The name of the function and default topic name.
 # - channel: The nsq channel of the function.
 # - command: Kubernetes command.
 # - replicas: Replica count for the initial pool.
+# - maxReplicas: Maximum ever replica count for the pool.
 # - resources: Kubernetes resources block.
 # - nodeSelector: Kubernetes nodeSelector block.
 # - tolerations: Kubernetes tolerations block.

@@ -70,4 +70,25 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
 {{- end }}
+
+---
+# function hpa {{ $function.name }}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $fullname }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $chartVersion }}
+    release: {{ $release.Name }}
+    heritage: {{ $release.Service }}
+    function: {{ $function.name }}
+spec:
+  maxReplicas: {{ default $values.defaults.maxReplicas $function.maxReplicas }}
+  minReplicas: {{ default $values.defaults.replicas $function.replicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1beta2
+    kind: Deployment
+    name: {{ $fullname }}
+  targetCPUUtilizationPercentage: {{ default $values.defaults.targetCPUUtilizationPercentage $function.targetCPUUtilizationPercentage }}
 {{ end -}}
