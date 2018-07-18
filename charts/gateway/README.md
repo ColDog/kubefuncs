@@ -1,6 +1,8 @@
 # Gateway
 
-Install the kubefuncs [gateway](gateway/README.md).
+The gateway package translates http calls to function calls and then takes the response and returns them to the client. There are standard facilities for processing HTTP calls in all client libraries.
+
+Read through the getting started guide to see an example of setting up the gateway.
 
 ## Prerequisites
 
@@ -29,7 +31,15 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Configuration
 
-View the [values.yaml](values.yaml) file for configuration information.
+The core configuration parameters needed for the gateway is the route configuration. The example below will route any calls to `/test/*` to the `test` function:
+
+```yaml
+config:
+  routes:
+    /test/: test
+```
+
+The routes key contains path prefixes to the path that they should be routed to.
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

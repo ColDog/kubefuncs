@@ -47,7 +47,7 @@ CMD /bin/app
 
 And the main function we only need:
 
-```golang
+```go
 // main.go
 package main
 

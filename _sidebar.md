@@ -12,5 +12,6 @@
   * [Nsq](charts/nsq/README.md)
 
 * [Developing Functions](charts/function/docs/developing.md)
-  * [Delivering](charts/function/docs/delivering.md)
+  * [Deploying](charts/function/docs/deploying.md)
   * [Monitoring](charts/function/docs/monitoring.md)
+  * [Scaling](charts/function/docs/scaling.md)
