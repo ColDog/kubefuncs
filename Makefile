@@ -3,8 +3,8 @@ FUNCTION_VERSION := $(shell cat charts/function/Chart.yaml | grep version | awk 
 KUBEFUNCS_VERSION := $(shell cat charts/kubefuncs/Chart.yaml | grep version | awk '{print $$2}')
 NSQ_VERSION := $(shell cat charts/nsq/Chart.yaml | grep version | awk '{print $$2}')
 
-CHART_BUCKET := kubefuncs-chart-repository
-CHART_REPO := https://s3.amazonaws.com/$(CHART_BUCKET)
+CHART_BUCKET := charts.kubefuncs.com
+CHART_REPO := https://$(CHART_BUCKET)
 
 export AWS_PROFILE=kubefuncs
 export AWS_REGION=us-east-1
@@ -106,7 +106,8 @@ release/docs:
 		--include "README.md" \
 		--include "index.html"
 
-release: release/function release/nsq release/gateway release/example release/kubefuncs release/docs release/git
+release/charts: release/function release/nsq release/gateway release/example release/kubefuncs
+release: release/charts release/docs release/git
 
 test/e2e:
 	@tests/e2e.sh

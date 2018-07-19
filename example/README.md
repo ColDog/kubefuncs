@@ -12,7 +12,7 @@ First step is to get the core Kubefuncs dependencies installed into your cluster
 To do this, add the helm repository:
 
 ```bash
-CHART_REPO="https://s3.amazonaws.com/kubefuncs-chart-registry"
+CHART_REPO="https://charts.kubefuncs.com"
 helm repo add kubefuncs ${CHART_REPO}
 ```
 
