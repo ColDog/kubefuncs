@@ -56,6 +56,8 @@ define package
 	helm repo index --url $(CHART_REPO) .repo
 
 	aws s3 cp .repo/index.yaml s3://$(CHART_BUCKET)/index.yaml
+
+	# TODO: Only copy if does not exist.
 	aws s3 cp \
 		.repo/$(1)-$(shell cat charts/$(1)/Chart.yaml | grep version | awk '{print $$2}').tgz \
 		s3://$(CHART_BUCKET)/$(1)-$(shell cat charts/$(1)/Chart.yaml | grep version | awk '{print $$2}').tgz
@@ -92,14 +94,8 @@ release/git:
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --tags origin master
 
-release: release/function release/nsq release/gateway release/example release/kubefuncs release/git
-
-test/e2e:
-	@tests/e2e.sh
-
-
-deploy/docs:
-	aws s3 sync ./ s3://kubefuncs.io \
+release/docs:
+	aws s3 sync ./ s3://kubefuncs.com \
 		--exclude "*" \
 		--include "charts/*.md" \
 		--include "clients/*.md" \
@@ -109,3 +105,8 @@ deploy/docs:
 		--include "_sidebar.md" \
 		--include "README.md" \
 		--include "index.html"
+
+release: release/function release/nsq release/gateway release/example release/kubefuncs release/docs release/git
+
+test/e2e:
+	@tests/e2e.sh
