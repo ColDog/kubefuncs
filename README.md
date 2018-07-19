@@ -62,6 +62,7 @@ Run `make local/setup` to get your minikube installation going. You can then run
 ### Releasing
 
 1. Update the chart versions in `chart/<name>/Chart.yaml` that need to be updated.
-2. Update `_coverpage.yaml` if the kubefuncs chart was updated.
-3. Run `make test/e2e` to be sure release hasn't broken anything.
-4. Run `make release`.
+2. Update the chart requirements in `chart/kubefuncs/requirements.yaml` that need to be updated.
+3. Update `_coverpage.yaml` if the kubefuncs chart was updated.
+4. Run `make test/e2e` to be sure release hasn't broken anything.
+5. Run `make release`.

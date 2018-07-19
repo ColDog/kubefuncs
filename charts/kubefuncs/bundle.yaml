@@ -6,7 +6,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.3
+    chart: gateway-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 data:
@@ -20,7 +20,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.3
+    chart: gateway-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -43,7 +43,7 @@ metadata:
   name: RELEASE-NAME-nsq-admin
   labels:
     app: nsq-admin
-    chart: nsq-v0.0.2
+    chart: nsq-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -64,7 +64,7 @@ metadata:
   name: RELEASE-NAME-nsq-lookupd
   labels:
     app: nsq-lookupd
-    chart: nsq-v0.0.2
+    chart: nsq-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -89,7 +89,7 @@ metadata:
   name: RELEASE-NAME-nsq-nsqd
   labels:
     app: nsq-nsqd
-    chart: nsq-v0.0.2
+    chart: nsq-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -147,7 +147,7 @@ metadata:
   name: RELEASE-NAME-gateway
   labels:
     app: gateway
-    chart: gateway-v0.0.3
+    chart: gateway-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: "coldog/kubefuncs-gateway:v0.0.3"
+          image: "coldog/kubefuncs-gateway:v0.1.0"
           imagePullPolicy: IfNotPresent
           command:
             - /bin/gateway
@@ -216,7 +216,7 @@ metadata:
   name: RELEASE-NAME-nsq-admin
   labels:
     app: nsq-admin
-    chart: nsq-v0.0.2
+    chart: nsq-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:
@@ -248,7 +248,7 @@ metadata:
   name: RELEASE-NAME-nsq-lookupd
   labels:
     app: nsq-lookupd
-    chart: nsq-v0.0.2
+    chart: nsq-v0.1.0
     release: RELEASE-NAME
     heritage: Tiller
 spec:

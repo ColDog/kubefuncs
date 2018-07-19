@@ -86,10 +86,13 @@ release/kubefuncs:
 	helm template charts/kubefuncs > charts/kubefuncs/bundle.yaml
 	$(call package,kubefuncs)
 
-release: release/function release/nsq release/gateway release/example release/kubefuncs
+release/git:
+	git add -A
 	git commit -m 'Release $(KUBEFUNCS_VERSION)'
 	git tag -a $(KUBEFUNCS_VERSION) -m "Release $(KUBEFUNCS_VERSION)"
 	git push --tags origin master
+
+release: release/function release/nsq release/gateway release/example release/kubefuncs release/git
 
 test/e2e:
 	@tests/e2e.sh
