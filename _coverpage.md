@@ -1,4 +1,4 @@
-# Kubefuncs <small>0.0.2</small>
+# Kubefuncs <small>0.1.0</small>
 
 > Building blocks for lightweight functions on top of Kubernetes.
 
