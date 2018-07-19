@@ -58,3 +58,10 @@ Required tools:
 * `docker`
 
 Run `make local/setup` to get your minikube installation going. You can then run `make local/deploy-kubefuncs` and `make local/deploy-example` to deploy the kubefuncs package and example app. Once this is setup, `make test/e2e` runs some basic e2e tests.
+
+### Releasing
+
+1. Update the chart versions in `chart/<name>/Chart.yaml` that need to be updated.
+2. Update `_coverpage.yaml` if the kubefuncs chart was updated.
+3. Run `make test/e2e` to be sure release hasn't broken anything.
+4. Run `make release`.

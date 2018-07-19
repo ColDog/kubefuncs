@@ -28,7 +28,9 @@ func (h *nsqClient) setupProducer() error {
 	if err != nil {
 		return err
 	}
-	producer.SetLogger(h.logger, nsq.LogLevelInfo)
+	if h.logger != nil {
+		producer.SetLogger(h.logger, nsq.LogLevelInfo)
+	}
 	h.producer = producer
 	return nil
 }
@@ -42,7 +44,9 @@ func (h *nsqClient) Subscribe(topic, channel string, handler Handler) error {
 	if err != nil {
 		return err
 	}
-	consumer.SetLogger(h.logger, nsq.LogLevelDebug)
+	if h.logger != nil {
+		consumer.SetLogger(h.logger, nsq.LogLevelDebug)
+	}
 	consumer.AddHandler(nsq.HandlerFunc(func(m *nsq.Message) error {
 		return handler(m.Body)
 	}))

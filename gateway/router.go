@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -40,7 +39,6 @@ func (ro *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	log.Printf("handling: %s routes=%+v", r.URL.Path, ro.Routes)
 	topic := ro.route(r.URL.Path)
 	if topic == "" {
 		w.WriteHeader(http.StatusNotFound)
